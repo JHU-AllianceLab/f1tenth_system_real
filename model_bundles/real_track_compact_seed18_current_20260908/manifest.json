@@ -1,0 +1,31 @@
+{
+  "action_high": [
+    0.4189000129699707,
+    3.0
+  ],
+  "action_low": [
+    -0.4189000129699707,
+    0.0
+  ],
+  "format_version": 1,
+  "p1": {
+    "actor": "p1_actor.pt",
+    "critic": "p1_critic.pt",
+    "observation_size": 91
+  },
+  "p2": {
+    "actor": "p2_actor.pt",
+    "critic": "p2_critic.pt",
+    "observation_size": 92
+  },
+  "source": {
+    "config_path": "/home/gongkai/Research/f1tenth_safe/f1tenth_safety_rl_gym/configs/real_track_compact_ras_detect1m_pass05_10lap_1m.yaml",
+    "config_sha256": "8e19224c16687880538eb06d48e2c3389ab01ccd0860f03159669f77cbe05984",
+    "p1_path": "/home/gongkai/Research/f1tenth_safe/f1tenth_safety_rl_gym/outputs/real_track_compact_p1_detect1m_pass05_seed18_20260907/final_model.zip",
+    "p1_sha256": "c2c8f2280e32a2024d5fa13629119cd5c0b3f582fa322b002861148ced25c94d",
+    "p2_path": "/home/gongkai/Research/f1tenth_safe/f1tenth_safety_rl_gym/outputs/real_track_compact_ras_detect1m_pass05_10lap_seed18_20260907/deployment_eval/best_model.zip",
+    "p2_sha256": "2598c4a257dd35e5860cd9e358a44dbac56702363889c25484c040a82877c191"
+  },
+  "training_config": "resolved_config.yaml",
+  "waypoints": "centerline.csv"
+}
