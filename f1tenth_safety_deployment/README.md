@@ -22,11 +22,21 @@ active P2/P1 Q-CBF filter, and publishes `AckermannDriveStamped`.
 
 These software checks do not replace a physical emergency stop.
 
-## 1. Export a matched model pair
+## Selected deployment model
 
-Wait until both P1 and P2 training finish and select a P1/P2 pair from the same
-seed. Export on the Python 3.10 training machine; do not export a moving
-checkpoint while it is being written.
+The package installs the matched seed-17 bundle
+`real_track_compact_seed17_hold25_qcert_20260909` and the hardware launch uses
+it by default. Its selected P2 checkpoint is the deployment-ranked 800k model.
+It passed 5/5 checkpoint-selection episodes with zero collisions, positive
+initial Q values, and 4.4 completed overtakes per episode on average. Its
+matching 10-lap rollout completed with five overtakes and no collision.
+
+The bundle contains TorchScript actors/critics, the resolved configuration,
+centerline, source hashes, and dimensions. TorchScript lets the Foxy runtime
+load the networks without installing Stable-Baselines3 or the training code.
+The onboard Python environment still needs a compatible PyTorch build.
+
+To reproduce the installed bundle on the training machine:
 
 ```bash
 cd /home/gongkai/Research/f1tenth_safe
@@ -35,21 +45,12 @@ PYTHONPATH=f1tenth_system/f1tenth_safety_deployment \
 f1tenth_safety_rl_gym/.venv/bin/python -m \
   f1tenth_safety_deployment.export_models \
   --workspace-root "$PWD" \
-  --p1-model f1tenth_safety_rl_gym/outputs/real_track_compact_p1_detect1m_pass05_seed18_20260907/final_model.zip \
-  --p2-model f1tenth_safety_rl_gym/outputs/real_track_compact_ras_detect1m_pass05_10lap_seed18_20260907/deployment_eval/best_model.zip \
+  --p1-model f1tenth_safety_rl_gym/outputs/real_track_compact_p1_detect1m_pass05_seed17_20260907/final_model.zip \
+  --p2-model f1tenth_safety_rl_gym/outputs/real_track_compact_ras_hold25_qcert_seed17_20260909/deployment_eval/best_model.zip \
   --config f1tenth_safety_rl_gym/configs/real_track_compact_ras_detect1m_pass05_10lap_1m.yaml \
-  --output /tmp/real_track_compact_seed18_current_bundle
+  --output /tmp/real_track_compact_seed17_hold25_qcert_bundle
 ```
 
-The output contains TorchScript actors/critics, the resolved configuration,
-centerline, source hashes, and dimensions. TorchScript lets the Foxy runtime
-load the networks without installing Stable-Baselines3 or the training code.
-The onboard Python environment still needs a compatible PyTorch build.
-
-The selected seed-18 deployment checkpoint is the deployment-ranked 800k
-checkpoint, not the final 1M checkpoint. With the current repeated-encounter
-logic it completed the reference 10-lap run with four overtakes and no
-collision. The controller re-arms P2 at each new encounter within 1 m.
 
 The trained ego footprint is 0.29 x 0.155 m, while the default physical-car
 envelope is 0.58 x 0.31 m. `deployment.yaml` compensates the policy LiDAR per
@@ -63,7 +64,7 @@ files together if the physical axle distance differs.
 Copy the complete bundle to the onboard computer without modifying individual
 files.
 
-## 2. Build the ROS workspace
+## 1. Build the ROS workspace
 
 Place `f1tenth_system/f1tenth_stack` and
 `f1tenth_system/f1tenth_safety_deployment` under the ROS workspace `src/`
@@ -79,7 +80,7 @@ source install/setup.bash
 Install the platform-specific PyTorch wheel separately when it is not supplied
 by the Jetson image.
 
-## 3. Start in shadow mode
+## 2. Start in shadow mode
 
 Place the physical ego precisely at the configured `map_start_pose`. With
 `ego_pose_is_map_frame: false`, the first `/odom` sample is aligned to that pose.
@@ -90,8 +91,7 @@ localized map-frame `Odometry` and set `ego_pose_is_map_frame: true` and
 ```bash
 ros2 launch f1tenth_stack bringup_virtual_safety_launch.py \
   enable_safety_controller:=true \
-  enable_virtual_opponent:=true \
-  model_bundle:=/absolute/path/to/real_track_compact_seed18_current_bundle
+  enable_virtual_opponent:=true
 ```
 
 Enable computation after all topics are visible:
@@ -119,19 +119,33 @@ ros2 service call /virtual_opponent/reset std_srvs/srv/Trigger "{}"
 ros2 service call /virtual_opponent/set_enabled std_srvs/srv/SetBool "{data: false}"
 ```
 
-## 4. Enable live output only after bag replay validation
+## 3. Enable low-speed live output only after bag replay validation
 
 Record `/scan`, ego/opponent Odometry, shadow commands, and controller status.
 Verify 33-Hz operation, input ages, map alignment, virtual LiDAR injection, and
 finite Q values by replaying the bag with the wheels off the ground.
 
-Then set `shadow_mode: false` in `config/deployment.yaml`, rebuild, and launch
-again. Keep `max_command_speed_mps: 0.5` for the first physical runs. That
-commissioning cap cannot overtake the 1.5 m/s virtual opponent; first lower the
-virtual opponent below 0.5 m/s, then increase both toward the trained 1.5 m/s
-opponent and 3.0 m/s ego limits only after clean bag-replay and low-speed runs.
-Publish a false enable message or release the hardware emergency stop to stop
-autonomous operation:
+Use the supplied live commissioning profile only after the shadow checks pass.
+It enables `/drive`, retains `start_enabled: false`, caps the ego at 0.5 m/s,
+and lowers the open-loop opponent to 0.35 m/s:
+
+```bash
+ros2 launch f1tenth_stack bringup_virtual_safety_launch.py \
+  enable_safety_controller:=true \
+  enable_virtual_opponent:=true \
+  safety_deployment_config:=$(ros2 pkg prefix f1tenth_safety_deployment)/share/f1tenth_safety_deployment/config/deployment_live_low_speed.yaml
+```
+
+Confirm the joystick/E-stop can stop the car, then explicitly enable autonomy:
+
+```bash
+ros2 topic pub --once /autonomy/enable std_msgs/msg/Bool "{data: true}"
+```
+
+Increase both vehicles toward the trained 1.5 m/s opponent and 3.0 m/s ego
+limits only after clean bag replay, wheels-up testing, low-speed driving, and
+measurement of the chassis, LiDAR transform, wheelbase, steering calibration,
+and speed calibration. Publish a false enable message to command zero speed:
 
 ```bash
 ros2 topic pub --once /autonomy/enable std_msgs/msg/Bool "{data: false}"

@@ -1,0 +1,172 @@
+# Compact CPU F1TENTH Gym RAS training on track_map_0901.
+#
+#   l2(x) = clip((ego_progress - opponent_progress - 0.5 m) / 1.0 m, -1, 1)
+#   V(x)  = V_P1(x)
+#   g2(x) = min(g_safe(x), max(-l2(x), V(x)))
+#
+# P1 and P2 are both fine-tuned because vehicle geometry, observation scales,
+# speed envelope, and the task target all differ from the source checkpoints.
+project:
+  run_name: real_track_compact_ras_detect1m_pass05_10lap_1m
+  seed: 17
+  output_dir: outputs
+
+environment:
+  map_path: ../f1tenth_safety_mjlab/track_map_0901.yaml
+  map_ext: .pgm
+  start_pose: [1.9251087, 1.3102571, -1.5716521]
+  timestep: 0.01
+  frame_skip: 3
+  # The former 6000-step ceiling allowed 180 s, which was sized for two laps.
+  # Preserve that per-lap time budget now that deployment runs for ten laps.
+  max_episode_steps: 30000
+  terminate_on_lap: false
+  target_laps: 10
+  opponent_count: 1
+  opponent_speed: 1.5
+  # Background traffic follows only its own pose and the fixed centerline. Its
+  # simulated LiDAR also excludes ego, while physical collisions remain active.
+  opponent_ego_invisible: true
+  opponent_lookahead_distance: 0.4
+  waypoint_path: assets/track_map_0901_centerline.csv
+  waypoint_delimiter: ";"
+  waypoint_rowskip: 3
+  waypoint_x_index: 1
+  waypoint_y_index: 2
+  wheelbase: 0.331
+  steering_min: -0.4189
+  steering_max: 0.4189
+  speed_min: 0.0
+  speed_max: 3.0
+  camera_half_width_m: 3.0
+
+observation:
+  mode: lidar_dynamics_local_interactions_lead_margin
+  lidar_beams: 64
+  lidar_fov: 4.7
+  max_scan_range: 3.0
+  speed_scale: 3.0
+  lateral_speed_scale: 1.5
+  yaw_rate_scale: 5.0
+
+safety:
+  vehicle_length: 0.29
+  vehicle_width: 0.155
+  opponent_vehicle_length: 0.29
+  opponent_vehicle_width: 0.155
+  buffer: 0.05
+  collision_margin: -1.0
+
+interaction:
+  radius_m: 1.0
+  max_observed_opponents: 3
+  vehicle_clearance_m: 0.05
+  target_gap_range_m: [0.5, 1.0]
+  target_margin_scale: 1.0
+  target_pass_buffer_m: 0.5
+  post_reach_hold_steps: 25
+  ego_speed_range_mps: [0.0, 3.0]
+  opponent_speed_range_mps: [1.2, 1.8]
+  relative_heading_range_rad: 0.10
+  track_lateral_offset_m: 0.075
+  corner_curvature_threshold: 0.025
+
+composed_safety:
+  postpass_mode: safety_only
+  # Keep the requested P2 composition exactly g2=min(g1,max(-l2,V1)).
+  # epsilon_enter remains an independent conservative deployment handoff gate.
+  p2_viability_epsilon: 0.0
+  epsilon_enter: 0.05
+  epsilon_emergency: 0.0
+  handoff_confirm_steps: 3
+  p1_pass_buffer_m: 0.5
+  pass_buffer_m: 0.5
+  lead_feature_scale_m: 1.0
+  lead_value_scale_m: 1.0
+  value_feature_scale: 1.0
+  p2_formulation: viability_constrained_avoid
+  empirical_zero_post_handoff_collision_gate: true
+
+repeated_overtaking:
+  enabled: true
+  entry_distance_m: 1.0
+  minimum_forward_gap_m: 0.05
+
+sampling:
+  max_reset_attempts: 100
+  p1_mixture:
+    near_boundary: 0.25
+    post_pass: 0.25
+    rear_approach_cut_in: 0.20
+    side_by_side: 0.15
+    closing_speed: 0.10
+    interior_safe: 0.05
+  p2_mixture:
+    behind: 1.0
+
+training: &cpu_training
+  total_timesteps: 1000000
+  learning_rate: 0.0001
+  buffer_size: 300000
+  learning_starts: 20000
+  batch_size: 128
+  # Actor-only warm starts already provide a stable behavior policy, so begin
+  # at 0.999 and anneal to 0.9999. The former 0.99 start erased delayed reach
+  # payoffs at this 33 Hz control rate.
+  gamma: 0.999
+  gamma_anneal: true
+  min_alpha: 0.001
+  tau: 0.005
+  train_freq: 4
+  gradient_steps: 1
+  ent_coef: auto_0.03
+  checkpoint_freq: 50000
+  eval_freq: 50000
+  eval_episodes: 10
+  device: cpu
+  policy_layers: [128, 128]
+  critic_layers: [256, 256]
+  behavior_hold_steps: 64
+  behavior_mixture:
+    safety_sac: 0.70
+    uniform: 0.00
+    mppi: 0.30
+    overtaking_dqn: 0.00
+
+p1_training:
+  <<: *cpu_training
+  run_name: real_track_compact_p1_detect1m_pass05_1m
+
+p2_training:
+  <<: *cpu_training
+  run_name: real_track_compact_ras_detect1m_pass05_10lap_1m
+
+filter:
+  gamma: 0.9
+  threshold: 0.0
+  line_search_points: 81
+  minimum_alpha: 0.25
+  search_mode: line
+  critic_disagreement_threshold: 0.50
+
+mppi:
+  horizon: 25
+  samples: 256
+  dt: 0.05
+  temperature: 2.0
+  target_speed: 2.0
+  steering_sigma: 0.12
+  speed_sigma: 0.5
+  track_half_width: 0.30
+
+fine_tune_evaluation:
+  seeds: [10017, 10018, 10019, 10020, 10021]
+  eval_freq: 100000
+
+wandb:
+  enabled: true
+  project: f1tenth-safety-rl
+  group: real-track-compact-ras-detect1m-pass05-10lap-1m-4seed
+  mode: offline
+  gradient_save_freq: 0
+  model_save_freq: 0

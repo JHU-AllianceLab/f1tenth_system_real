@@ -17,10 +17,15 @@ def generate_launch_description():
     deployment_config = os.path.join(
         deployment_share, "config", "deployment.yaml"
     )
+    default_model_bundle = os.path.join(
+        deployment_share,
+        "model_bundles",
+        "real_track_compact_seed17_hold25_qcert_20260909",
+    )
 
     model_bundle = DeclareLaunchArgument(
         "model_bundle",
-        default_value="",
+        default_value=default_model_bundle,
         description="Directory containing the exported P1/P2 TorchScript bundle",
     )
     safety_config = DeclareLaunchArgument(

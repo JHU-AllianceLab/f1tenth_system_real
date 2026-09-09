@@ -5,6 +5,7 @@ from setuptools import find_packages, setup
 
 
 package_name = "f1tenth_safety_deployment"
+default_model_bundle = "real_track_compact_seed17_hold25_qcert_20260909"
 
 
 setup(
@@ -15,6 +16,10 @@ setup(
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml", "README.md"]),
         (os.path.join("share", package_name, "config"), glob("config/*.yaml")),
+        (
+            os.path.join("share", package_name, "model_bundles", default_model_bundle),
+            glob(os.path.join("model_bundles", default_model_bundle, "*")),
+        ),
     ],
     install_requires=["setuptools", "numpy", "PyYAML"],
     zip_safe=True,

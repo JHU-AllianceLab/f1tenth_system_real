@@ -1,0 +1,56 @@
+composed_safety_controller:
+  ros__parameters:
+    # Explicit live commissioning profile. The node still requires a true
+    # /autonomy/enable message before it publishes a moving command.
+    shadow_mode: false
+    start_enabled: false
+    control_rate_hz: 33.333333
+    max_input_age_sec: 0.15
+    max_control_latency_sec: 0.05
+    max_command_speed_mps: 0.5
+    torch_device: cpu
+    inject_virtual_opponent_into_scan: true
+
+    # Measure the physical chassis and replace these values before driving.
+    # The policy was trained with a 0.29 x 0.155 m footprint; the controller
+    # compensates LiDAR clearance between that footprint and this envelope.
+    physical_vehicle_length_m: 0.58
+    physical_vehicle_width_m: 0.31
+
+    repeated_overtaking: true
+    encounter_entry_distance_m: 1.0
+    minimum_forward_gap_m: 0.05
+
+    # For repeated laps, replace /odom with localized map-frame Odometry and
+    # set ego_pose_is_map_frame to true.
+    ego_pose_is_map_frame: false
+    map_start_pose: [1.9251087, 1.3102571, -1.5716521]
+
+    laser_x: 0.27
+    laser_y: 0.0
+    laser_yaw: 0.0
+    mppi_seed: 7
+    mppi_wheelbase_m: 0.25
+
+    scan_topic: /scan
+    ego_odom_topic: /odom
+    opponent_odom_topic: /virtual_opponent/odom
+    enable_topic: /autonomy/enable
+    drive_topic: /drive
+    shadow_drive_topic: /safety_controller/shadow_drive
+    status_topic: /safety_controller/status
+
+virtual_opponent:
+  ros__parameters:
+    odom_topic: /virtual_opponent/odom
+    marker_topic: /virtual_opponent/marker
+    map_frame: map
+    child_frame: virtual_opponent
+    publish_rate_hz: 40.0
+    # Low-speed commissioning value. Restore 1.5 m/s only when the ego speed
+    # cap is raised after calibration and closed-course validation.
+    speed_mps: 0.35
+    initial_progress_m: 0.75
+    vehicle_length: 0.29
+    vehicle_width: 0.155
+    enabled: true
