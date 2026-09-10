@@ -20,7 +20,7 @@ def generate_launch_description():
     default_model_bundle = os.path.join(
         deployment_share,
         "model_bundles",
-        "real_track_compact_seed17_hold25_qcert_20260909",
+        "real_track_compact_seed18_qpositive_hybrid300_20260909",
     )
 
     model_bundle = DeclareLaunchArgument(

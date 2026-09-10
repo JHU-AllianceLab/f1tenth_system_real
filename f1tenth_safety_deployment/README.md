@@ -24,12 +24,19 @@ These software checks do not replace a physical emergency stop.
 
 ## Selected deployment model
 
-The package installs the matched seed-17 bundle
-`real_track_compact_seed17_hold25_qcert_20260909` and the hardware launch uses
-it by default. Its selected P2 checkpoint is the deployment-ranked 800k model.
-It passed 5/5 checkpoint-selection episodes with zero collisions, positive
-initial Q values, and 4.4 completed overtakes per episode on average. Its
-matching 10-lap rollout completed with five overtakes and no collision.
+The package installs the seed-18 positive-Q hybrid bundle
+`real_track_compact_seed18_qpositive_hybrid300_20260909` and the hardware launch
+uses it by default. It combines the actor from the original successful seed-18
+compact-track model with the Q-certified critic from the seed-18 300k-step
+checkpoint. In the 10-lap seed-18 replay, the initial nominal and safe Q values
+were +0.1353 and +0.1593, and the run completed four overtakes with no ego or
+opponent collision in 125.76 seconds.
+
+Initial Q was nonnegative in all five held-out evaluations, but only four of
+the five completed safely; held-out seed 10018 collided with a vehicle at
+1.47 seconds. The bundle therefore remains shadow-mode-only pending physical
+validation. Retain the shadow-mode and 0.5 m/s commissioning limits below and
+validate recorded physical inputs before allowing live commands.
 
 The bundle contains TorchScript actors/critics, the resolved configuration,
 centerline, source hashes, and dimensions. TorchScript lets the Foxy runtime
@@ -45,10 +52,10 @@ PYTHONPATH=f1tenth_system/f1tenth_safety_deployment \
 f1tenth_safety_rl_gym/.venv/bin/python -m \
   f1tenth_safety_deployment.export_models \
   --workspace-root "$PWD" \
-  --p1-model f1tenth_safety_rl_gym/outputs/real_track_compact_p1_detect1m_pass05_seed17_20260907/final_model.zip \
-  --p2-model f1tenth_safety_rl_gym/outputs/real_track_compact_ras_hold25_qcert_seed17_20260909/deployment_eval/best_model.zip \
+  --p1-model f1tenth_safety_rl_gym/outputs/real_track_compact_p1_detect1m_pass05_seed18_20260907/final_model.zip \
+  --p2-model f1tenth_safety_rl_gym/outputs/real_track_compact_seed18_qpositive_hybrid300_20260909/p2_hybrid_model.zip \
   --config f1tenth_safety_rl_gym/configs/real_track_compact_ras_detect1m_pass05_10lap_1m.yaml \
-  --output /tmp/real_track_compact_seed17_hold25_qcert_bundle
+  --output /tmp/real_track_compact_seed18_qpositive_hybrid300_bundle
 ```
 
 

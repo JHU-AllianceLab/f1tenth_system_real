@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 
 package_name = "f1tenth_safety_deployment"
-default_model_bundle = "real_track_compact_seed17_hold25_qcert_20260909"
+default_model_bundle = "real_track_compact_seed18_qpositive_hybrid300_20260909"
 
 
 setup(
@@ -38,4 +38,3 @@ setup(
         ],
     },
 )
-

@@ -1,0 +1,21 @@
+{
+  "model_sha256": "83f8be41f1609d31b535667b7370f5f89687bb5ed17dc7a24a398f89c294a3d3",
+  "configuration": "configs/real_track_compact_ras_detect1m_pass05_10lap_1m.yaml",
+  "opponent_lookahead_distance_m": 0.8,
+  "deployment_seed_18": {
+    "initial_q_nominal": 0.13527967035770416,
+    "initial_q_safe": 0.1593351662158966,
+    "laps": 10,
+    "completed_overtakes": 4,
+    "ego_collision": false,
+    "opponent_collision": false,
+    "time_s": 125.76
+  },
+  "held_out_seeds": [10017, 10018, 10019, 10020, 10021],
+  "held_out_initial_q_nonnegative": 5,
+  "held_out_successes": 4,
+  "held_out_failures": {
+    "10018": "vehicle_collision_at_1.47_s"
+  },
+  "deployment_status": "shadow_mode_only_pending_physical_validation"
+}
