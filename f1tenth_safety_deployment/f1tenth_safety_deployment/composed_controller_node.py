@@ -220,10 +220,10 @@ class ComposedControllerNode(Node):
             "max_input_age_sec": 0.15,
             "max_control_latency_sec": 0.05,
             "max_command_speed_mps": 0.5,
-            # These are conservative full-size chassis defaults. Measure the
-            # actual car; the exported model contract remains 0.29 x 0.155 m.
-            "physical_vehicle_length_m": 0.58,
-            "physical_vehicle_width_m": 0.31,
+            # Measured physical ego chassis; the exported model contract
+            # remains 0.29 x 0.155 m and is compensated in the LiDAR input.
+            "physical_vehicle_length_m": 0.568,
+            "physical_vehicle_width_m": 0.296,
             "shadow_mode": True,
             "start_enabled": False,
             "inject_virtual_opponent_into_scan": True,
@@ -233,7 +233,7 @@ class ComposedControllerNode(Node):
             "laser_y": 0.0,
             "laser_yaw": 0.0,
             "mppi_seed": 7,
-            "mppi_wheelbase_m": 0.25,
+            "mppi_wheelbase_m": 0.324,
             "repeated_overtaking": True,
             "encounter_entry_distance_m": 1.0,
             "minimum_forward_gap_m": 0.05,

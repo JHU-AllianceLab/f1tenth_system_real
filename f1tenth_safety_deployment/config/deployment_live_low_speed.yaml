@@ -11,11 +11,11 @@ composed_safety_controller:
     torch_device: cpu
     inject_virtual_opponent_into_scan: true
 
-    # Measure the physical chassis and replace these values before driving.
-    # The policy was trained with a 0.29 x 0.155 m footprint; the controller
-    # compensates LiDAR clearance between that footprint and this envelope.
-    physical_vehicle_length_m: 0.58
-    physical_vehicle_width_m: 0.31
+    # Measured physical chassis dimensions. The policy was trained with a
+    # 0.29 x 0.155 m footprint; the controller compensates LiDAR clearance
+    # between that footprint and this envelope.
+    physical_vehicle_length_m: 0.568
+    physical_vehicle_width_m: 0.296
 
     repeated_overtaking: true
     encounter_entry_distance_m: 1.0
@@ -30,7 +30,7 @@ composed_safety_controller:
     laser_y: 0.0
     laser_yaw: 0.0
     mppi_seed: 7
-    mppi_wheelbase_m: 0.25
+    mppi_wheelbase_m: 0.324
 
     scan_topic: /scan
     ego_odom_topic: /odom

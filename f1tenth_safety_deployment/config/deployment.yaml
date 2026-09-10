@@ -12,11 +12,11 @@ composed_safety_controller:
     torch_device: cpu
     inject_virtual_opponent_into_scan: true
 
-    # The learned model used a half-size 0.29 x 0.155 m ego. These parameters
-    # describe the actual chassis; LiDAR ranges are conservatively compensated
-    # so the learned critic sees the same footprint-relative clearance.
-    physical_vehicle_length_m: 0.58
-    physical_vehicle_width_m: 0.31
+    # The learned model used a half-size 0.29 x 0.155 m ego. These are the
+    # measured physical chassis dimensions; LiDAR ranges are conservatively
+    # compensated so the critic sees the same footprint-relative clearance.
+    physical_vehicle_length_m: 0.568
+    physical_vehicle_width_m: 0.296
 
     # Re-arm P2 whenever the same centerline opponent is encountered again.
     repeated_overtaking: true
@@ -33,8 +33,8 @@ composed_safety_controller:
     laser_y: 0.0
     laser_yaw: 0.0
     mppi_seed: 7
-    # Matches vesc.yaml and must be replaced with the measured axle distance.
-    mppi_wheelbase_m: 0.25
+    # Measured axle distance; must match vesc.yaml.
+    mppi_wheelbase_m: 0.324
 
     scan_topic: /scan
     ego_odom_topic: /odom

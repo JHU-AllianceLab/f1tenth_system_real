@@ -59,14 +59,13 @@ f1tenth_safety_rl_gym/.venv/bin/python -m \
 ```
 
 
-The trained ego footprint is 0.29 x 0.155 m, while the default physical-car
-envelope is 0.58 x 0.31 m. `deployment.yaml` compensates the policy LiDAR per
-ray for that difference and uses the physical dimensions for geometric wall
-and opponent margins. Measure the actual chassis and update
-`physical_vehicle_length_m`, `physical_vehicle_width_m`, and the calibrated
-`laser_*` values before live operation. The deployment MPPI wheelbase defaults
-to the existing `vesc.yaml` calibration of 0.25 m; measure and update both
-files together if the physical axle distance differs.
+The trained ego footprint is 0.29 x 0.155 m. The measured physical ego is
+0.568 x 0.296 m with a 0.324 m wheelbase; the virtual opponent remains
+0.29 x 0.155 m. `deployment.yaml` compensates the policy LiDAR per ray for the
+ego-footprint difference and uses the physical ego dimensions for geometric
+wall and opponent margins. Its MPPI wheelbase and the odometry wheelbase in
+`vesc.yaml` are both 0.324 m. Recheck the chassis dimensions and calibrated
+`laser_*` values whenever the physical platform or sensor mounting changes.
 
 Copy the complete bundle to the onboard computer without modifying individual
 files.
